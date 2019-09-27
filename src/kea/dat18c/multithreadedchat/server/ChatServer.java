@@ -30,7 +30,7 @@ public class ChatServer {
             }
 
         } catch (IOException ex) {
-            System.out.println("Error in the server: " + ex.getMessage());
+            System.out.println("Error in the server:2 " + ex.getMessage());
             ex.printStackTrace();
         }
     }
