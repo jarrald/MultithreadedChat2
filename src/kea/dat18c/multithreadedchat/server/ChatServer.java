@@ -5,6 +5,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
 public class ChatServer {
     private int port;
     private Set<String> userNames = new HashSet<>();
@@ -18,21 +23,26 @@ public class ChatServer {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
 
             System.out.println("Chat Server is listening on port " + port);
-
+            ExecutorService executor = Executors.newFixedThreadPool(5);
             while (true) {
                 Socket socket = serverSocket.accept();
-                System.out.println("New user connected");
+                if(userThreads.size()<5) {
+                    System.out.println("New user connected");
 
-                UserThread newUser = new UserThread(socket, this);
-                userThreads.add(newUser);
-                newUser.start();
-
+                    UserThread newUser = new UserThread(socket, this);
+                    userThreads.add(newUser);
+                    executor.execute(newUser);
+                }
             }
 
         } catch (IOException ex) {
             System.out.println("Error in the server: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
+
+    public void denyAccess(String errmsg){
+
     }
 
     public static void main(String[] args) {
