@@ -1,5 +1,7 @@
 package kea.dat18c.multithreadedchat.client;
 
+import kea.dat18c.multithreadedchat.server.ChatServer;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -40,7 +42,7 @@ public class WriteThread extends Thread {
                 text = reader.readLine();
                 writer.println(text);
 
-            } while (!text.equals("bye"));
+            } while (!text.equals(ChatServer.serverQuit));
         } catch (IOException e) {
             e.printStackTrace();
         }

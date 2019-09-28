@@ -6,53 +6,73 @@ public class UserThread extends Thread {
     private Socket socket;
     private ChatServer server;
     private PrintWriter writer;
+    private String errorMsg;
 
     public UserThread(Socket socket, ChatServer server) {
         this.socket = socket;
         this.server = server;
+        this.errorMsg = ChatServer.serverOk;
+    }
+    public UserThread(Socket socket, ChatServer server, String errorMsg) {
+        this.socket = socket;
+        this.server = server;
+        this.errorMsg = errorMsg;
     }
 
     public void run() {
-        try {
-            InputStream input = socket.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+        if(errorMsg.equals(ChatServer.serverOk)){
+            try {
+                InputStream input = socket.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
-            OutputStream output = socket.getOutputStream();
-            writer = new PrintWriter(output, true);
+                OutputStream output = socket.getOutputStream();
+                writer = new PrintWriter(output, true);
+                sendMessage(ChatServer.serverOk);
+                printUsers();
 
-            printUsers();
+                String userName = reader.readLine();
+                server.addUserName(userName);
 
-            String userName = reader.readLine();
-            server.addUserName(userName);
-
-            String serverMessage = "New user connected: " + userName;
-            server.broadcast(serverMessage, this);
-
-            String clientMessage;
-
-            do {
-                clientMessage = reader.readLine();
-                serverMessage = "[" + userName + "]: " + clientMessage;
+                String serverMessage = "New user connected: " + userName;
                 server.broadcast(serverMessage, this);
 
-            } while (!clientMessage.equals("bye"));
+                String clientMessage;
 
-            server.removeUser(userName, this);
-            socket.close();
+                do {
+                    clientMessage = reader.readLine();
+                    serverMessage = "[" + userName + "]: " + clientMessage;
+                    server.broadcast(serverMessage, this);
 
-            serverMessage = userName + " has quitted.";
-            server.broadcast(serverMessage, this);
+                } while (!clientMessage.equals(ChatServer.serverQuit));
 
-        } catch (IOException ex) {
-            System.out.println("Error in UserThread: " + ex.getMessage());
-            ex.printStackTrace();
+                server.removeUser(userName, this);
+                socket.close();
+
+                serverMessage = userName + " has quitted.";
+                server.broadcast(serverMessage, this);
+
+            } catch (IOException ex) {
+                System.out.println("Error in UserThread: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+        else{
+            OutputStream output = null;
+            try {
+                output = socket.getOutputStream();
+                writer = new PrintWriter(output, true);
+                sendMessage(errorMsg);
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     /**
      * Sends a list of online users to the newly connected user.
      */
-    void printUsers() {
+    public void printUsers() {
         if (server.hasUsers()) {
             writer.println("Connected users: " + server.getUserNames());
         } else {
@@ -63,7 +83,7 @@ public class UserThread extends Thread {
     /**
      * Sends a message to the client.
      */
-    void sendMessage(String message) {
+    public void sendMessage(String message) {
         writer.println(message);
     }
 }
