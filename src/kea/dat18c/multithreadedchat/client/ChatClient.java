@@ -12,6 +12,8 @@ public class ChatClient {
     private int port;
     private String userName;
 
+    public static final String clientQuit = "QUIT";
+
     public ChatClient(String hostname, int port) {
         this.hostname = hostname;
         this.port = port;
