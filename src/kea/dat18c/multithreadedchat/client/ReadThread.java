@@ -25,8 +25,8 @@ public class ReadThread extends Thread {
     public void run() {
         try {
             String connected = reader.readLine();
-
-            if(connected.equals(ChatServer.serverOk)){
+            System.out.println(connected);
+            if(connected.equals(ChatClient.clientOk)){
                 while (true) {
                     try {
                         String response = reader.readLine();

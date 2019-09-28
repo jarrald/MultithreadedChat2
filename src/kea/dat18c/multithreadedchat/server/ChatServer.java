@@ -44,7 +44,8 @@ public class ChatServer {
                     executor.execute(newUser);
                 }
                 else{
-
+                    UserThread sendError = new UserThread(socket, this, serverFull);
+                    (new Thread(sendError)).start();
                 }
             }
 
