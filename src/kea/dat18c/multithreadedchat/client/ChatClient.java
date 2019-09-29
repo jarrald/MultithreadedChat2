@@ -12,9 +12,10 @@ public class ChatClient {
     public static final String clientQuit = "QUIT";
     public static final String clientOk = "J_OK";
 
-    public ChatClient(String hostname, int port) {
+    public ChatClient(String hostname, int port, String userName) {
         this.hostname = hostname;
         this.port = port;
+        this.userName = userName;
     }
 
     public void execute() {
@@ -28,9 +29,11 @@ public class ChatClient {
                 OutputStream output = socket.getOutputStream();
                 PrintWriter writer = new PrintWriter(output, true);
 
+                writer.println(userName);
                 String connected = reader.readLine();
                 System.out.println(connected);
                 if(connected.equals(ChatClient.clientOk)){
+
                     new ReadThread(socket, this, input, reader).start();
                     new WriteThread(socket, this, writer).start();
                 }
@@ -113,8 +116,9 @@ public class ChatClient {
                 String hostname = (command.split(","))[0].split("JOIN ")[0];
                 //Parses port number
                 int port = Integer.parseInt(command.split(":")[1]);
+                String userName = (command.split(", ")[0]).split("JOIN ")[1];
                 correctSyntax = true;
-                ChatClient client = new ChatClient(hostname, port);
+                ChatClient client = new ChatClient(hostname, port, userName);
                 client.execute();
             }
             else {

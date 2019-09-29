@@ -23,16 +23,16 @@ public class WriteThread extends Thread {
     }
     public void run() {
         try {
-            Console console = System.console();
+            //Console console = System.console();
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-            System.out.print("\nEnter your name: ");
+            //System.out.print("\nEnter your name: ");
             //String userName = null;
-            String userName = reader.readLine();
+            //String userName = reader.readLine();
 
-            client.setUserName(userName);
-            writer.println(userName);
+            //client.setUserName(userName);
+            //writer.println(userName);
 
             String text;
 

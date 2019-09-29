@@ -38,25 +38,25 @@ public class UserThread extends Thread {
                 sendMessage(ChatServer.serverOk);
                 printUsers();
 
-                String userName = reader.readLine();
-                server.addUserName(userName);
+                //String userName = reader.readLine();
+                server.addUserName(username);
 
-                String serverMessage = "New user connected: " + userName;
+                String serverMessage = "New user connected: " + username;
                 server.broadcast(serverMessage, this);
 
                 String clientMessage;
 
                 do {
                     clientMessage = reader.readLine();
-                    serverMessage = "[" + userName + "]: " + clientMessage;
+                    serverMessage = "[" + username + "]: " + clientMessage;
                     server.broadcast(serverMessage, this);
 
                 } while (!clientMessage.equals(ChatServer.serverQuit));
 
-                server.removeUser(userName, this);
+                server.removeUser(username, this);
                 socket.close();
 
-                serverMessage = userName + " has quitted.";
+                serverMessage = username + " has quitted.";
                 server.broadcast(serverMessage, this);
 
             } catch (IOException ex) {

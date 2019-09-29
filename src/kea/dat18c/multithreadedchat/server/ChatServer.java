@@ -39,14 +39,20 @@ public class ChatServer {
             ExecutorService executor = Executors.newFixedThreadPool(capacity);
             while (true) {
                 Socket socket = serverSocket.accept();
+                InputStream input = socket.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+                String userName = reader.readLine();
                 if(userThreads.size()<capacity) {
-                    System.out.println("New user connected");
-                    InputStream input = socket.getInputStream();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-
-                    UserThread newUser = new UserThread(socket, this, reader, "test");
-                    userThreads.add(newUser);
-                    executor.execute(newUser);
+                    if(!userNames.contains(userName)){
+                        System.out.println("New user connected "+userName);
+                        UserThread newUser = new UserThread(socket, this, reader, userName);
+                        userThreads.add(newUser);
+                        executor.execute(newUser);
+                    }
+                    else{
+                        UserThread sendError = new UserThread(socket, this, serverUserExists);
+                        (new Thread(sendError)).start();
+                    }
                 }
                 else{
                     UserThread sendError = new UserThread(socket, this, serverFull);
