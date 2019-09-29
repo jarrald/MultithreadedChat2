@@ -8,17 +8,18 @@ public class WriteThread extends Thread {
     private Socket socket;
     private ChatClient client;
 
-    public WriteThread(Socket socket, ChatClient client) {
+    public WriteThread(Socket socket, ChatClient client, PrintWriter writer) {
         this.socket = socket;
         this.client = client;
-
+        this.writer = writer;
+        /*
         try {
             OutputStream output = socket.getOutputStream();
             writer = new PrintWriter(output, true);
         } catch (IOException ex) {
             System.out.println("Error getting output stream: " + ex.getMessage());
             ex.printStackTrace();
-        }
+        }*/
     }
     public void run() {
         try {

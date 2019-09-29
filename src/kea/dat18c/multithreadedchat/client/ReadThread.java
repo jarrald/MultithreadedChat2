@@ -23,10 +23,6 @@ public class ReadThread extends Thread {
     }
 
     public void run() {
-        try {
-            String connected = reader.readLine();
-            System.out.println(connected);
-            if(connected.equals(ChatClient.clientOk)){
                 while (true) {
                     try {
                         String response = reader.readLine();
@@ -42,14 +38,5 @@ public class ReadThread extends Thread {
                         break;
                     }
                 }
-            }
-            else{
-                System.out.println(connected);
-                System.exit(1);
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

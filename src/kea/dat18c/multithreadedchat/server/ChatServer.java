@@ -1,6 +1,9 @@
 package kea.dat18c.multithreadedchat.server;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
@@ -38,8 +41,10 @@ public class ChatServer {
                 Socket socket = serverSocket.accept();
                 if(userThreads.size()<capacity) {
                     System.out.println("New user connected");
+                    InputStream input = socket.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
-                    UserThread newUser = new UserThread(socket, this);
+                    UserThread newUser = new UserThread(socket, this, reader, "test");
                     userThreads.add(newUser);
                     executor.execute(newUser);
                 }

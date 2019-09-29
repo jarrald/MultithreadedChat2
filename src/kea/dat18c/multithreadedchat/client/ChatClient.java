@@ -1,9 +1,6 @@
 package kea.dat18c.multithreadedchat.client;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -28,13 +25,21 @@ public class ChatClient {
             try {
                 InputStream input = socket.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-                new ReadThread(socket, this, input, reader).start();
+                OutputStream output = socket.getOutputStream();
+                PrintWriter writer = new PrintWriter(output, true);
+
+                String connected = reader.readLine();
+                System.out.println(connected);
+                if(connected.equals(ChatClient.clientOk)){
+                    new ReadThread(socket, this, input, reader).start();
+                    new WriteThread(socket, this, writer).start();
+                }
             } catch (IOException ex) {
-            System.out.println("Error getting input stream: " + ex.getMessage());
+            System.out.println("Error getting stream: " + ex.getMessage());
             ex.printStackTrace();
             }
 
-            new WriteThread(socket, this).start();
+
 
         } catch (UnknownHostException ex) {
             System.out.println("Server not found: " + ex.getMessage());

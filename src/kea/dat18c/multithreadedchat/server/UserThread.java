@@ -7,11 +7,20 @@ public class UserThread extends Thread {
     private ChatServer server;
     private PrintWriter writer;
     private String errorMsg;
+    private String username;
+    private BufferedReader reader;
 
     public UserThread(Socket socket, ChatServer server) {
         this.socket = socket;
         this.server = server;
         this.errorMsg = ChatServer.serverOk;
+    }
+    public UserThread(Socket socket, ChatServer server, BufferedReader reader, String username) {
+        this.socket = socket;
+        this.server = server;
+        this.errorMsg = ChatServer.serverOk;
+        this.reader = reader;
+        this.username = username;
     }
     public UserThread(Socket socket, ChatServer server, String errorMsg) {
         this.socket = socket;
@@ -22,8 +31,7 @@ public class UserThread extends Thread {
     public void run() {
         if(errorMsg.equals(ChatServer.serverOk)){
             try {
-                InputStream input = socket.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+
 
                 OutputStream output = socket.getOutputStream();
                 writer = new PrintWriter(output, true);
