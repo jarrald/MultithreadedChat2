@@ -26,6 +26,11 @@ public class ReadThread extends Thread {
                 while (true) {
                     try {
                         String response = reader.readLine();
+                        if(response.equals("J_ER 10: Disconnected")||response.isEmpty())
+                        {
+                            client.setDisconnected(true);
+                            break;
+                        }
                         System.out.println("\n" + response);
 
                         // prints the username after displaying the server's message

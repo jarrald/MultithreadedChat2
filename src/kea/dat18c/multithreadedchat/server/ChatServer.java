@@ -6,10 +6,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Time;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.time.temporal.TemporalUnit;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class ChatServer {
     private int port;
@@ -23,7 +28,7 @@ public class ChatServer {
     public static final String serverFull = "Error: Server is at max capacity.";
     public static final String serverUserExists = "Error: username taken.";
     public static final String serverQuit = "QUIT";
-    public static final String serverList = "LISTUSERS";
+    public static final String serverList = "LIST";
     public static final int defaultCapacity = 5;
     public static final int defaultPort = 6000;
 
@@ -37,6 +42,7 @@ public class ChatServer {
 
             System.out.println("Chat Server is listening on port " + port);
             ExecutorService executor = Executors.newFixedThreadPool(capacity);
+            (new Thread(new keepClientsAlive(TimeUnit.MINUTES, 1, this))).start();
             while (true) {
                 Socket socket = serverSocket.accept();
                 InputStream input = socket.getInputStream();
@@ -101,7 +107,7 @@ public class ChatServer {
     }
 
     /**
-     * When a client is disconneted, removes the associated username and UserThread
+     * When a client is disconnected, removes the associated username and UserThread
      */
     public void removeUser(String userName, UserThread aUser) {
         boolean removed = userNames.remove(userName);
@@ -120,5 +126,35 @@ public class ChatServer {
      */
     public boolean hasUsers() {
         return !this.userNames.isEmpty();
+    }
+    private class keepClientsAlive implements Runnable{
+        TimeUnit timeUnit;
+        long keepAlive;
+        ChatServer server;
+        public keepClientsAlive(TimeUnit timeUnit, long keepAlive, ChatServer server){
+            this.timeUnit = timeUnit;
+            this.keepAlive = keepAlive;
+            this.server = server;
+        }
+        @Override
+        public void run() {
+            try {
+                while (true){
+                    for(UserThread userThread : server.userThreads){
+                        LocalTime timeNow = LocalTime.now();
+                        if(userThread.getLastAlive().isBefore(timeNow.minus(this.keepAlive, this.timeUnit.toChronoUnit()))){
+                            userThread.killThread();
+                            System.out.println("User: "+userThread.getUsername()+" was disconnected due to inactivity");
+                            //server.removeUser(userThread.getUsername(),userThread);
+                        }
+                    }
+                    timeUnit.sleep(keepAlive);
+                }
+            } catch (InterruptedException e) {
+                System.out.println("Server heartbeat thread stopped, currently no limit for connection time\n"
+                +"Please reset the server to fix it.");
+                e.printStackTrace();
+            }
+        }
     }
 }

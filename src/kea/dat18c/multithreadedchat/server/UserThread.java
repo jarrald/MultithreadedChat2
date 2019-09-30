@@ -2,13 +2,24 @@ package kea.dat18c.multithreadedchat.server;
 
 import java.io.*;
 import java.net.Socket;
+import java.sql.Time;
+import java.time.LocalTime;
+import java.util.concurrent.TimeUnit;
+
 public class UserThread extends Thread {
     private Socket socket;
     private ChatServer server;
     private PrintWriter writer;
     private String errorMsg;
+    private boolean disconnected;
+
+    public String getUsername() {
+        return username;
+    }
+
     private String username;
     private BufferedReader reader;
+    private LocalTime lastAlive;
 
     public UserThread(Socket socket, ChatServer server) {
         this.socket = socket;
@@ -28,6 +39,10 @@ public class UserThread extends Thread {
         this.errorMsg = errorMsg;
     }
 
+    public LocalTime getLastAlive() {
+        return lastAlive;
+    }
+
     public void run() {
         if(errorMsg.equals(ChatServer.serverOk)){
             try {
@@ -40,18 +55,39 @@ public class UserThread extends Thread {
 
                 //String userName = reader.readLine();
                 server.addUserName(username);
+                this.lastAlive = LocalTime.now();
+                this.disconnected = false;
 
                 String serverMessage = "New user connected: " + username;
                 server.broadcast(serverMessage, this);
 
-                String clientMessage;
+                String clientCommand;
 
                 do {
-                    clientMessage = reader.readLine();
-                    serverMessage = "[" + username + "]: " + clientMessage;
-                    server.broadcast(serverMessage, this);
+                    if(disconnected)
+                        break;
+                    clientCommand = reader.readLine();
+                    if(clientCommand.startsWith("DATA "+username+": ")){
+                        String message = (clientCommand.split(": ")[1]);
+                        //Cuts message to 250 characters
+                        if(message.length()>250) {
+                            message = message.substring(0,249);
+                        }
+                        serverMessage = "[" + username + "]: " +message;
+                        server.broadcast(serverMessage, this);
+                    }
+                    else if(clientCommand.equals(ChatServer.serverList)){
+                        printUsers();
+                    }
+                    else if(clientCommand.equals("IMAV")){
+                        resetLastAlive();
+                    }
+                    else{
+                        writer.println("J_ER 9: Unknown command");
+                    }
 
-                } while (!clientMessage.equals(ChatServer.serverQuit));
+
+                } while (!clientCommand.equals(ChatServer.serverQuit));
 
                 server.removeUser(username, this);
                 socket.close();
@@ -76,7 +112,21 @@ public class UserThread extends Thread {
             }
         }
     }
-
+    public synchronized void killThread(){
+        try{
+            sendMessage("J_ER 10: Disconnected");
+            server.removeUser(username, this);
+            this.disconnected = true;
+            socket.close();
+            //To get out of the loop
+            throw new IOException(username + " was disconnected cause of inactivity");
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+    public void resetLastAlive(){
+        this.lastAlive = LocalTime.now();
+    }
     /**
      * Sends a list of online users to the newly connected user.
      */

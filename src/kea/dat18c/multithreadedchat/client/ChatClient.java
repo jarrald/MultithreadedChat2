@@ -8,6 +8,15 @@ public class ChatClient {
     private String hostname;
     private int port;
     private String userName;
+    private Boolean disconnected;
+
+    public Boolean hasDisconnected() {
+        return disconnected;
+    }
+
+    public void setDisconnected(Boolean disconnected) {
+        this.disconnected = disconnected;
+    }
 
     public static final String clientQuit = "QUIT";
     public static final String clientOk = "J_OK";
@@ -32,6 +41,7 @@ public class ChatClient {
                 writer.println(userName);
                 String connected = reader.readLine();
                 System.out.println(connected);
+                this.disconnected = false;
                 if(connected.equals(ChatClient.clientOk)){
 
                     new ReadThread(socket, this, input, reader).start();
@@ -83,7 +93,9 @@ public class ChatClient {
                 "From client to server.\n" +
                 "From server to all clients.\n" +
                 "First part of message indicates from which user it is, the colon(:)\n" +
-                "indicates where the user message begins. Max 250 user characters.\n\n" +
+                "indicates where the user message begins. Max 250 user characters.\n" +
+                "(This isn't something visible to end users, only on a network level.\n"+
+                "Users can type regularly except for the commands LIST & QUIT.)\n\n"+
 
                 "IMAV\n" +
                 "From client to server.\n" +
