@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ReadThread extends Thread {
     private BufferedReader reader;
@@ -26,9 +27,14 @@ public class ReadThread extends Thread {
                 while (true) {
                     try {
                         String response = reader.readLine();
-                        if(response.equals("J_ER 10: Disconnected")||response.isEmpty())
+                        if(response.equals(ChatClient.serverDisconnected)||response.isEmpty())
                         {
+                            socket.close();
                             client.setDisconnected(true);
+                            break;
+                        }
+                        else if(response.equals(ChatClient.serverQuitReply)) {
+                            socket.close();
                             break;
                         }
                         System.out.println("\n" + response);
@@ -37,9 +43,10 @@ public class ReadThread extends Thread {
                         if (client.getUserName() != null) {
                             System.out.print("[" + client.getUserName() + "]: ");
                         }
-                    } catch (IOException ex) {
+                    }
+                    catch (Exception ex) {
                         System.out.println("Error reading from server: " + ex.getMessage());
-                        ex.printStackTrace();
+                        //ex.printStackTrace();
                         break;
                     }
                 }

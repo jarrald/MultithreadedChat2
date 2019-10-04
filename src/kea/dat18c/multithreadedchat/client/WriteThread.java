@@ -40,15 +40,23 @@ public class WriteThread extends Thread {
                 //System.out.print("["+userName+"]2: ");
                 text = reader.readLine();
                 if(!client.hasDisconnected()){
-                if(text.equals(ChatClient.clientQuit) || text.equals("LIST") || text.equals("IMAV"))
-                    writer.println(text);
-                else{
-                    String message = "DATA "+client.getUserName()+": "+text;
-                    writer.println(message);
+                    if(text.equals(ChatClient.clientQuit)) {
+                        writer.println(text);
+                        break;
+                    }
+                    else if(text.equals("LIST") || text.equals("IMAV"))
+                        writer.println(text);
+                    else{
+                        String message = "DATA "+client.getUserName()+": "+text;
+                        writer.println(message);
+                    }
                 }
+                else{
+                    System.out.println("Disconnected, shutting down");
+                    break;
                 }
 
-            } while (!text.equals(ChatClient.clientQuit) || !client.hasDisconnected());
+            } while (!client.hasDisconnected() && !socket.isClosed());
         } catch (IOException e) {
             e.printStackTrace();
         }

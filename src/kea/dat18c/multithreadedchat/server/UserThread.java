@@ -2,11 +2,10 @@ package kea.dat18c.multithreadedchat.server;
 
 import java.io.*;
 import java.net.Socket;
-import java.sql.Time;
+import java.net.SocketException;
 import java.time.LocalTime;
-import java.util.concurrent.TimeUnit;
 
-public class UserThread extends Thread {
+public class UserThread implements Runnable {
     private Socket socket;
     private ChatServer server;
     private PrintWriter writer;
@@ -55,6 +54,7 @@ public class UserThread extends Thread {
 
                 //String userName = reader.readLine();
                 server.addUserName(username);
+                Thread.currentThread().setName("UserThread-"+username);
                 this.lastAlive = LocalTime.now();
                 this.disconnected = false;
 
@@ -82,6 +82,10 @@ public class UserThread extends Thread {
                     else if(clientCommand.equals("IMAV")){
                         resetLastAlive();
                     }
+
+                    else if(clientCommand.strip().equals(ChatServer.serverQuit)){
+                        writer.println(ChatServer.serverQuitReply);
+                    }
                     else{
                         writer.println("J_ER 9: Unknown command");
                     }
@@ -95,8 +99,12 @@ public class UserThread extends Thread {
                 serverMessage = username + " has quitted.";
                 server.broadcast(serverMessage, this);
 
-            } catch (IOException ex) {
-                System.out.println("Error in UserThread: " + ex.getMessage());
+            }
+            catch (SocketException ex){
+                System.out.println(this.username+" disconnected.");
+            }
+            catch (IOException ex) {
+                System.out.println("Error in "+Thread.currentThread().getName()+": " + ex.getMessage());
                 ex.printStackTrace();
             }
         }
@@ -112,16 +120,18 @@ public class UserThread extends Thread {
             }
         }
     }
-    public synchronized void killThread(){
+    public void killThread(){
         try{
-            sendMessage("J_ER 10: Disconnected");
-            server.removeUser(username, this);
+            synchronized (server.getUserThreads()){
+            sendMessage(ChatServer.serverDisconnected);
             this.disconnected = true;
             socket.close();
+            server.removeUser(username, this);
             //To get out of the loop
             throw new IOException(username + " was disconnected cause of inactivity");
+            }
         }catch (IOException e){
-            e.printStackTrace();
+            System.out.println( e.getMessage());
         }
     }
     public void resetLastAlive(){

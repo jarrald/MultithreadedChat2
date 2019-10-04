@@ -9,6 +9,10 @@ public class ChatClient {
     private int port;
     private String userName;
     private Boolean disconnected;
+    public static final String clientQuit = "QUIT";
+    public static final String clientOk = "J_OK";
+    public static final String serverQuitReply = "Quit successfully";
+    public static final String serverDisconnected = "J_ER 3: Disconnected due to inactivity";
 
     public Boolean hasDisconnected() {
         return disconnected;
@@ -17,10 +21,6 @@ public class ChatClient {
     public void setDisconnected(Boolean disconnected) {
         this.disconnected = disconnected;
     }
-
-    public static final String clientQuit = "QUIT";
-    public static final String clientOk = "J_OK";
-
     public ChatClient(String hostname, int port, String userName) {
         this.hostname = hostname;
         this.port = port;

@@ -25,8 +25,10 @@ public class ChatServer {
     //Server responses, commands and default values below
 
     public static final String serverOk = "J_OK";
-    public static final String serverFull = "Error: Server is at max capacity.";
-    public static final String serverUserExists = "Error: username taken.";
+    public static final String serverFull = "J_ER 1: Server is at max capacity.";
+    public static final String serverUserExists = "J_ER 2: Username taken.";
+    public static final String serverDisconnected = "J_ER 3: Disconnected due to inactivity";
+    public static final String serverQuitReply = "Quit successfully";
     public static final String serverQuit = "QUIT";
     public static final String serverList = "LIST";
     public static final int defaultCapacity = 5;
@@ -71,7 +73,9 @@ public class ChatServer {
             ex.printStackTrace();
         }
     }
-
+    public Set<UserThread> getUserThreads(){
+        return this.userThreads;
+    }
     public void denyAccess(String errmsg){
 
     }
@@ -140,13 +144,16 @@ public class ChatServer {
         public void run() {
             try {
                 while (true){
+                    synchronized (this){
                     for(UserThread userThread : server.userThreads){
                         LocalTime timeNow = LocalTime.now();
                         if(userThread.getLastAlive().isBefore(timeNow.minus(this.keepAlive, this.timeUnit.toChronoUnit()))){
+
                             userThread.killThread();
-                            System.out.println("User: "+userThread.getUsername()+" was disconnected due to inactivity");
+                            //System.out.println("User: "+userThread.getUsername()+" was disconnected due to inactivity");
                             //server.removeUser(userThread.getUsername(),userThread);
                         }
+                    }
                     }
                     timeUnit.sleep(keepAlive);
                 }
