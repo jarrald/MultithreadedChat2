@@ -10,6 +10,7 @@ import java.sql.Time;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.temporal.TemporalUnit;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -19,8 +20,8 @@ import java.util.concurrent.TimeUnit;
 public class ChatServer {
     private int port;
     private int capacity;
-    private Set<String> userNames = new HashSet<>();
-    private Set<UserThread> userThreads = new HashSet<>();
+    private Set<String> userNames = Collections.synchronizedSet( new HashSet<>());
+    private Set<UserThread> userThreads = Collections.synchronizedSet( new HashSet<>());
 
     //Server responses, commands and default values below
 
@@ -44,7 +45,7 @@ public class ChatServer {
 
             System.out.println("Chat Server is listening on port " + port);
             ExecutorService executor = Executors.newFixedThreadPool(capacity);
-            (new Thread(new keepClientsAlive(TimeUnit.MINUTES, 1, this))).start();
+            (new Thread(new keepClientsAlive(TimeUnit.SECONDS, 10, this))).start();
             while (true) {
                 Socket socket = serverSocket.accept();
                 InputStream input = socket.getInputStream();

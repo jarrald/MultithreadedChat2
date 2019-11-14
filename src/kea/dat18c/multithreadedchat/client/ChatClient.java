@@ -13,6 +13,50 @@ public class ChatClient {
     public static final String clientOk = "J_OK";
     public static final String serverQuitReply = "Quit successfully";
     public static final String serverDisconnected = "J_ER 3: Disconnected due to inactivity";
+    public static final String tutString = "Protocol between Chat server and client:\n" +
+            "List of allowed messages (and their meaning):\n\n" +
+
+            "JOIN <<user_name>>, <<server_ip>>:<<server_port>>\n" +
+            "From client to server.\n" +
+            "The user name is given by the user. Username is max 12 chars long, only\n" +
+            "letters, digits, ‘-‘ and ‘_’ allowed.\n\n" +
+
+            "J_OK\n" +
+            "From server to client.\n" +
+            "Client is accepted.\n\n" +
+
+            "J_ER <<err_code>>: <<err_msg>>\n" +
+            "From server to client.\n" +
+            "Client not accepted. Duplicate username, unknown command, bad command or\n" +
+            "any other errors.\n\n" +
+
+            "DATA <<user_name>>: <<free text…>>\n" +
+            "From client to server.\n" +
+            "From server to all clients.\n" +
+            "First part of message indicates from which user it is, the colon(:)\n" +
+            "indicates where the user message begins. Max 250 user characters.\n" +
+            "(This isn't something visible to end users, only on a network level.\n"+
+            "Users can type regularly except for the commands LIST & QUIT.)\n\n"+
+
+            "IMAV\n" +
+            "From client to server.\n" +
+            "Client sends this heartbeat alive every 1 minute.\n\n" +
+            "QUIT\n" +
+            "From client to server.\n" +
+            "Client is closing down and leaving the group.\n\n" +
+
+            "LIST <<name1 name2 name3 …>>\n" +
+            "From server to client.\n" +
+            "A list of all active user names is sent to all clients, each time the\n" +
+            "list at the server changes.\n\n" +
+
+            "Note:\n" +
+            "This notation <<info>> indicates a placeholder, and they need to be\n" +
+            "replaced with appropriate content.\n" +
+            "E.g.:\n" +
+            "JOIN <<user_name>>, <<server_ip>>:<<server_port>>\n" +
+            "Might look like this:\n" +
+            "JOIN alice_92, 172.168.168.12:4578";
 
     public Boolean hasDisconnected() {
         return disconnected;
@@ -72,50 +116,7 @@ public class ChatClient {
 
 
     public static void main(String[] args) throws IOException {
-        System.out.println("Protocol between Chat server and client:\n" +
-                "List of allowed messages (and their meaning):\n\n" +
-
-                "JOIN <<user_name>>, <<server_ip>>:<<server_port>>\n" +
-                "From client to server.\n" +
-                "The user name is given by the user. Username is max 12 chars long, only\n" +
-                "letters, digits, ‘-‘ and ‘_’ allowed.\n\n" +
-
-                "J_OK\n" +
-                "From server to client.\n" +
-                "Client is accepted.\n\n" +
-
-                "J_ER <<err_code>>: <<err_msg>>\n" +
-                "From server to client.\n" +
-                "Client not accepted. Duplicate username, unknown command, bad command or\n" +
-                "any other errors.\n\n" +
-
-                "DATA <<user_name>>: <<free text…>>\n" +
-                "From client to server.\n" +
-                "From server to all clients.\n" +
-                "First part of message indicates from which user it is, the colon(:)\n" +
-                "indicates where the user message begins. Max 250 user characters.\n" +
-                "(This isn't something visible to end users, only on a network level.\n"+
-                "Users can type regularly except for the commands LIST & QUIT.)\n\n"+
-
-                "IMAV\n" +
-                "From client to server.\n" +
-                "Client sends this heartbeat alive every 1 minute.\n\n" +
-                "QUIT\n" +
-                "From client to server.\n" +
-                "Client is closing down and leaving the group.\n\n" +
-
-                "LIST <<name1 name2 name3 …>>\n" +
-                "From server to client.\n" +
-                "A list of all active user names is sent to all clients, each time the\n" +
-                "list at the server changes.\n\n" +
-
-                "Note:\n" +
-                "This notation <<info>> indicates a placeholder, and they need to be\n" +
-                "replaced with appropriate content.\n" +
-                "E.g.:\n" +
-                "JOIN <<user_name>>, <<server_ip>>:<<server_port>>\n" +
-                "Might look like this:\n" +
-                "JOIN alice_92, 172.168.168.12:4578");
+        System.out.println(tutString);
         boolean correctSyntax = false;
         do {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
