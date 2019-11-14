@@ -1,13 +1,8 @@
 package kea.dat18c.multithreadedchat.client;
 
-import kea.dat18c.multithreadedchat.server.ChatServer;
-
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Socket;
-import java.net.SocketException;
 
 public class ReadThread extends Thread {
     private BufferedReader reader;
@@ -27,13 +22,13 @@ public class ReadThread extends Thread {
                 while (true) {
                     try {
                         String response = reader.readLine();
-                        if(response.equals(ChatClient.serverDisconnected)||response.isEmpty())
+                        if(response.equals(ChatClient.SERVER_DISCONNECTED)||response.isEmpty())
                         {
                             socket.close();
                             client.setDisconnected(true);
                             break;
                         }
-                        else if(response.equals(ChatClient.serverQuitReply)) {
+                        else if(response.equals(ChatClient.SERVER_QUIT_REPLY)) {
                             socket.close();
                             break;
                         }

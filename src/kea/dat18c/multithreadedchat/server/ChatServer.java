@@ -37,15 +37,15 @@ public class ChatServer {
 
     //Server responses, commands and default values below
 
-    public static final String serverOk = "J_OK";
-    public static final String serverFull = "J_ER 1: Server is at max capacity.";
-    public static final String serverUserExists = "J_ER 2: Username taken.";
-    public static final String serverDisconnected = "J_ER 3: Disconnected due to inactivity";
-    public static final String serverQuitReply = "Quit successfully";
-    public static final String serverQuit = "QUIT";
-    public static final String serverList = "LIST";
-    public static final int defaultCapacity = 5;
-    public static final int defaultPort = 6000;
+    public static final String SERVER_OK = "J_OK";
+    public static final String SERVER_FULL = "J_ER 1: Server is at max capacity.";
+    public static final String USERNAME_TAKEN = "J_ER 2: Username taken.";
+    public static final String SERVER_DISCONNECTED = "J_ER 3: Disconnected due to inactivity";
+    public static final String SERVER_QUIT_REPLY = "Quit successfully";
+    public static final String SERVER_QUIT = "QUIT";
+    public static final String SERVER_LIST = "LIST";
+    public static final int DEFAULT_CAPACITY = 5;
+    public static final int DEFAULT_PORT = 6000;
 
     public ChatServer(int port, int capacity, Path logPath) {
         this.port = port;
@@ -80,12 +80,12 @@ public class ChatServer {
                         executor.execute(newUser);
                     }
                     else{
-                        UserThread sendError = new UserThread(socket, this, serverUserExists);
+                        UserThread sendError = new UserThread(socket, this, USERNAME_TAKEN);
                         (new Thread(sendError)).start();
                     }
                 }
                 else{
-                    UserThread sendError = new UserThread(socket, this, serverFull);
+                    UserThread sendError = new UserThread(socket, this, SERVER_FULL);
                     (new Thread(sendError)).start();
                 }
             }
@@ -105,7 +105,7 @@ public class ChatServer {
     public static void main(String[] args) {
         int port;
         if (args.length < 1) {
-            port = defaultPort;
+            port = DEFAULT_PORT;
         }
         else {
             port = Integer.parseInt(args[0]);
@@ -123,7 +123,7 @@ public class ChatServer {
 
         System.out.println("Logging file to: "+logName);
         Path logPath = Paths.get(logName);
-        ChatServer server = new ChatServer(port, ChatServer.defaultCapacity, logPath);
+        ChatServer server = new ChatServer(port, ChatServer.DEFAULT_CAPACITY, logPath);
         server.execute();
     }
 
@@ -185,19 +185,19 @@ public class ChatServer {
             try {
                 while (true){
                     synchronized (this){
-                    for(UserThread userThread : server.userThreads){
-                        LocalTime timeNow = LocalTime.now();
-                        if(userThread.getLastAlive().isBefore(timeNow.minus(this.keepAlive, this.timeUnit.toChronoUnit()))){
+                        for(UserThread userThread : server.userThreads){
+                            LocalTime timeNow = LocalTime.now();
+                            if(userThread.getLastAlive().isBefore(timeNow.minus(this.keepAlive, this.timeUnit.toChronoUnit()))){
 
-                            try {
-                                userThread.killThread();
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                                try {
+                                    userThread.killThread();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                //System.out.println("User: "+userThread.getUsername()+" was disconnected due to inactivity");
+                                //server.removeUser(userThread.getUsername(),userThread);
                             }
-                            //System.out.println("User: "+userThread.getUsername()+" was disconnected due to inactivity");
-                            //server.removeUser(userThread.getUsername(),userThread);
                         }
-                    }
                     }
                     timeUnit.sleep(keepAlive);
                 }

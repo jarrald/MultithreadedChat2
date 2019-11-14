@@ -9,11 +9,11 @@ public class ChatClient {
     private int port;
     private String userName;
     private Boolean disconnected;
-    public static final String clientQuit = "QUIT";
-    public static final String clientOk = "J_OK";
-    public static final String serverQuitReply = "Quit successfully";
-    public static final String serverDisconnected = "J_ER 3: Disconnected due to inactivity";
-    public static final String tutString = "Protocol between Chat server and client:\n" +
+    public static final String CLIENT_QUIT = "QUIT";
+    public static final String CLIENT_OK = "J_OK";
+    public static final String SERVER_QUIT_REPLY = "Quit successfully";
+    public static final String SERVER_DISCONNECTED = "J_ER 3: Disconnected due to inactivity";
+    public static final String TUT_STRING = "Protocol between Chat server and client:\n" +
             "List of allowed messages (and their meaning):\n\n" +
 
             "JOIN <<user_name>>, <<server_ip>>:<<server_port>>\n" +
@@ -86,7 +86,7 @@ public class ChatClient {
                 String connected = reader.readLine();
                 System.out.println(connected);
                 this.disconnected = false;
-                if(connected.equals(ChatClient.clientOk)){
+                if(connected.equals(ChatClient.CLIENT_OK)){
 
                     new ReadThread(socket, this, input, reader).start();
                     new WriteThread(socket, this, writer).start();
@@ -116,7 +116,7 @@ public class ChatClient {
 
 
     public static void main(String[] args) throws IOException {
-        System.out.println(tutString);
+        System.out.println(TUT_STRING);
         boolean correctSyntax = false;
         do {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));

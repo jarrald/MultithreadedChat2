@@ -40,7 +40,7 @@ public class WriteThread extends Thread {
                 //System.out.print("["+userName+"]2: ");
                 text = reader.readLine();
                 if(!client.hasDisconnected()){
-                    if(text.equals(ChatClient.clientQuit)) {
+                    if(text.equals(ChatClient.CLIENT_QUIT)) {
                         writer.println(text);
                         break;
                     }

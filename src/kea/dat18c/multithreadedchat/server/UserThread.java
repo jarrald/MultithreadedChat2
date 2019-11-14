@@ -23,12 +23,12 @@ public class UserThread implements Runnable {
     public UserThread(Socket socket, ChatServer server) {
         this.socket = socket;
         this.server = server;
-        this.errorMsg = ChatServer.serverOk;
+        this.errorMsg = ChatServer.SERVER_OK;
     }
     public UserThread(Socket socket, ChatServer server, BufferedReader reader, String username) {
         this.socket = socket;
         this.server = server;
-        this.errorMsg = ChatServer.serverOk;
+        this.errorMsg = ChatServer.SERVER_OK;
         this.reader = reader;
         this.username = username;
     }
@@ -43,13 +43,13 @@ public class UserThread implements Runnable {
     }
 
     public void run() {
-        if(errorMsg.equals(ChatServer.serverOk)){
+        if(errorMsg.equals(ChatServer.SERVER_OK)){
             try {
 
 
                 OutputStream output = socket.getOutputStream();
                 writer = new PrintWriter(output, true);
-                sendMessage(ChatServer.serverOk);
+                sendMessage(ChatServer.SERVER_OK);
                 printUsers();
 
                 //String userName = reader.readLine();
@@ -76,22 +76,22 @@ public class UserThread implements Runnable {
                         serverMessage = "[" + username + "]: " +message;
                         server.broadcast(serverMessage, this);
                     }
-                    else if(clientCommand.equals(ChatServer.serverList)){
+                    else if(clientCommand.equals(ChatServer.SERVER_LIST)){
                         printUsers();
                     }
                     else if(clientCommand.equals("IMAV")){
                         resetLastAlive();
                     }
 
-                    else if(clientCommand.strip().equals(ChatServer.serverQuit)){
-                        writer.println(ChatServer.serverQuitReply);
+                    else if(clientCommand.strip().equals(ChatServer.SERVER_QUIT)){
+                        writer.println(ChatServer.SERVER_QUIT_REPLY);
                     }
                     else{
                         writer.println("J_ER 9: Unknown command");
                     }
 
 
-                } while (!clientCommand.equals(ChatServer.serverQuit));
+                } while (!clientCommand.equals(ChatServer.SERVER_QUIT));
 
                 server.removeUser(username, this);
                 socket.close();
@@ -128,7 +128,7 @@ public class UserThread implements Runnable {
     public void killThread() throws IOException {
         try{
             synchronized (server.getUserThreads()){
-            sendMessage(ChatServer.serverDisconnected);
+            sendMessage(ChatServer.SERVER_DISCONNECTED);
             this.disconnected = true;
             socket.close();
             server.removeUser(username, this);
