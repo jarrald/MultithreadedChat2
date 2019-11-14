@@ -1,20 +1,21 @@
 package kea.dat18c.multithreadedchat.server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.Time;
-import java.time.Duration;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalTime;
-import java.time.temporal.TemporalUnit;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class ChatServer {
@@ -22,6 +23,17 @@ public class ChatServer {
     private int capacity;
     private Set<String> userNames = Collections.synchronizedSet( new HashSet<>());
     private Set<UserThread> userThreads = Collections.synchronizedSet( new HashSet<>());
+
+    public Path getLogPath() {
+        return logPath;
+    }
+
+    public void setLogPath(Path logPath) {
+        this.logPath = logPath;
+    }
+
+    private Path logPath;
+    
 
     //Server responses, commands and default values below
 
@@ -35,17 +47,26 @@ public class ChatServer {
     public static final int defaultCapacity = 5;
     public static final int defaultPort = 6000;
 
-    public ChatServer(int port, int capacity) {
+    public ChatServer(int port, int capacity, Path logPath) {
         this.port = port;
         this.capacity = capacity;
+        this.logPath = logPath;
+    }
+
+    public void logString(String text) throws IOException {
+        String logText = new Date().toLocaleString() +" "+ text;
+        Files.write(logPath, Collections.singleton(logText), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
     }
 
     public void execute() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
 
-            System.out.println("Chat Server is listening on port " + port);
+            String startStatus =  new Date().toLocaleString() + " Chat Server is listening on port " + port;
+            Files.write(logPath, Collections.singleton(startStatus), StandardCharsets.UTF_8);
+            System.out.println(startStatus);
+
             ExecutorService executor = Executors.newFixedThreadPool(capacity);
-            (new Thread(new keepClientsAlive(TimeUnit.SECONDS, 10, this))).start();
+            (new Thread(new keepClientsAlive(TimeUnit.MINUTES, 1, this))).start();
             while (true) {
                 Socket socket = serverSocket.accept();
                 InputStream input = socket.getInputStream();
@@ -89,7 +110,20 @@ public class ChatServer {
         else {
             port = Integer.parseInt(args[0]);
         }
-        ChatServer server = new ChatServer(port, ChatServer.defaultCapacity);
+
+        //Chooses a random filename with logFile_xxxx.txt where the x's are numbers, if it exists it tries again
+        boolean availableFileName = false;
+        String logName ="logFile_"+ ThreadLocalRandom.current().nextInt(1,9999)+".txt";
+        while(!availableFileName){
+            if(Files.exists(Paths.get(logName)))
+                logName ="logFile_"+ ThreadLocalRandom.current().nextInt(1,9999)+".txt";
+            else
+                availableFileName = true;
+        }
+
+        System.out.println("Logging file to: "+logName);
+        Path logPath = Paths.get(logName);
+        ChatServer server = new ChatServer(port, ChatServer.defaultCapacity, logPath);
         server.execute();
     }
 
@@ -97,6 +131,11 @@ public class ChatServer {
      * Delivers a message from one user to others (broadcasting)
      */
     public void broadcast(String message, UserThread excludeUser) {
+        try {
+            logString(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         for (UserThread aUser : userThreads) {
             if (aUser != excludeUser) {
                 aUser.sendMessage(message);
@@ -150,7 +189,11 @@ public class ChatServer {
                         LocalTime timeNow = LocalTime.now();
                         if(userThread.getLastAlive().isBefore(timeNow.minus(this.keepAlive, this.timeUnit.toChronoUnit()))){
 
-                            userThread.killThread();
+                            try {
+                                userThread.killThread();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                             //System.out.println("User: "+userThread.getUsername()+" was disconnected due to inactivity");
                             //server.removeUser(userThread.getUsername(),userThread);
                         }

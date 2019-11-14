@@ -101,6 +101,11 @@ public class UserThread implements Runnable {
 
             }
             catch (SocketException ex){
+                try {
+                    server.logString(this.username+" disconnected.");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 System.out.println(this.username+" disconnected.");
             }
             catch (IOException ex) {
@@ -120,7 +125,7 @@ public class UserThread implements Runnable {
             }
         }
     }
-    public void killThread(){
+    public void killThread() throws IOException {
         try{
             synchronized (server.getUserThreads()){
             sendMessage(ChatServer.serverDisconnected);
@@ -131,6 +136,7 @@ public class UserThread implements Runnable {
             throw new IOException(username + " was disconnected cause of inactivity");
             }
         }catch (IOException e){
+            server.logString(username + " was disconnected cause of inactivity");
             System.out.println( e.getMessage());
         }
     }

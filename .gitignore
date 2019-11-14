@@ -33,3 +33,6 @@ build/
 ### Java compiled ###
 
 *.class
+
+### Log file ###
+*.txt
