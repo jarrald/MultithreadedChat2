@@ -1,5 +1,6 @@
 package kea.dat18c.multithreadedchat.server;
 
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,10 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalTime;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -66,7 +64,8 @@ public class ChatServer {
             System.out.println(startStatus);
 
             ExecutorService executor = Executors.newFixedThreadPool(capacity);
-            (new Thread(new keepClientsAlive(TimeUnit.MINUTES, 1, this))).start();
+            Thread heartBeat = new Thread(new ActivityMonitor(TimeUnit.SECONDS, 10, this));
+            heartBeat.start();
             while (true) {
                 Socket socket = serverSocket.accept();
                 InputStream input = socket.getInputStream();
@@ -110,13 +109,14 @@ public class ChatServer {
         else {
             port = Integer.parseInt(args[0]);
         }
-
+        //Creates directory if there isn't one for logs, won't overwrite.
+        new File("logs").mkdirs();
         //Chooses a random filename with logFile_xxxx.txt where the x's are numbers, if it exists it tries again
         boolean availableFileName = false;
-        String logName ="logFile_"+ ThreadLocalRandom.current().nextInt(1,9999)+".txt";
+        String logName ="logs/"+ ThreadLocalRandom.current().nextInt(1,9999)+".txt";
         while(!availableFileName){
             if(Files.exists(Paths.get(logName)))
-                logName ="logFile_"+ ThreadLocalRandom.current().nextInt(1,9999)+".txt";
+                logName ="logs/"+ ThreadLocalRandom.current().nextInt(1,9999)+".txt";
             else
                 availableFileName = true;
         }
@@ -164,48 +164,42 @@ public class ChatServer {
     public Set<String> getUserNames() {
         return this.userNames;
     }
-
     /**
      * Returns true if there are other users connected (not count the currently connected user)
      */
     public boolean hasUsers() {
         return !this.userNames.isEmpty();
     }
-    private class keepClientsAlive implements Runnable{
+    private class ActivityMonitor implements Runnable{
         TimeUnit timeUnit;
         long keepAlive;
         ChatServer server;
-        public keepClientsAlive(TimeUnit timeUnit, long keepAlive, ChatServer server){
+        public ActivityMonitor(TimeUnit timeUnit, long keepAlive, ChatServer server){
             this.timeUnit = timeUnit;
             this.keepAlive = keepAlive;
             this.server = server;
         }
         @Override
         public void run() {
-            try {
                 while (true){
-                    synchronized (this){
+                    try {
+                        List<UserThread> usersToKick = new ArrayList<>(5);
                         for(UserThread userThread : server.userThreads){
                             LocalTime timeNow = LocalTime.now();
                             if(userThread.getLastAlive().isBefore(timeNow.minus(this.keepAlive, this.timeUnit.toChronoUnit()))){
-
-                                try {
-                                    userThread.killThread();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                                //System.out.println("User: "+userThread.getUsername()+" was disconnected due to inactivity");
-                                //server.removeUser(userThread.getUsername(),userThread);
+                                usersToKick.add(userThread);
                             }
                         }
+                        for (UserThread userThread : usersToKick){
+                            userThread.disconnect();
+                            server.removeUser(userThread.getUsername(), userThread);
+                            server.logString(userThread.getUsername() + " was disconnected cause of inactivity");
+                        }
+                        timeUnit.sleep(keepAlive);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    timeUnit.sleep(keepAlive);
                 }
-            } catch (InterruptedException e) {
-                System.out.println("Server heartbeat thread stopped, currently no limit for connection time\n"
-                +"Please reset the server to fix it.");
-                e.printStackTrace();
-            }
         }
     }
 }

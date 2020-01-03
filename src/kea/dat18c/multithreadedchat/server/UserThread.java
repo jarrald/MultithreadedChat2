@@ -64,8 +64,6 @@ public class UserThread implements Runnable {
                 String clientCommand;
 
                 do {
-                    if(disconnected)
-                        break;
                     clientCommand = reader.readLine();
                     if(clientCommand.startsWith("DATA "+username+": ")){
                         String message = (clientCommand.split(": ")[1]);
@@ -79,34 +77,29 @@ public class UserThread implements Runnable {
                     else if(clientCommand.equals(ChatServer.SERVER_LIST)){
                         printUsers();
                     }
-                    else if(clientCommand.equals("IMAV")){
-                        resetLastAlive();
-                    }
-
                     else if(clientCommand.strip().equals(ChatServer.SERVER_QUIT)){
                         writer.println(ChatServer.SERVER_QUIT_REPLY);
                     }
                     else{
                         writer.println("J_ER 9: Unknown command");
                     }
-
-
-                } while (!clientCommand.equals(ChatServer.SERVER_QUIT));
-
+                    resetLastAlive();
+                } while (!clientCommand.equals(ChatServer.SERVER_QUIT) || disconnected);
+                serverMessage = username + " has quit.";
+                server.broadcast(serverMessage, this);
                 server.removeUser(username, this);
                 socket.close();
 
-                serverMessage = username + " has quitted.";
-                server.broadcast(serverMessage, this);
-
             }
             catch (SocketException ex){
+                /*
                 try {
                     server.logString(this.username+" disconnected.");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 System.out.println(this.username+" disconnected.");
+                 */
             }
             catch (IOException ex) {
                 System.out.println("Error in "+Thread.currentThread().getName()+": " + ex.getMessage());
@@ -125,19 +118,14 @@ public class UserThread implements Runnable {
             }
         }
     }
-    public void killThread() throws IOException {
-        try{
-            synchronized (server.getUserThreads()){
-            sendMessage(ChatServer.SERVER_DISCONNECTED);
-            this.disconnected = true;
+    public void disconnect() {
+        sendMessage(ChatServer.SERVER_DISCONNECTED);
+        this.disconnected = true;
+        try {
             socket.close();
-            server.removeUser(username, this);
-            //To get out of the loop
-            throw new IOException(username + " was disconnected cause of inactivity");
-            }
-        }catch (IOException e){
-            server.logString(username + " was disconnected cause of inactivity");
-            System.out.println( e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Couldn't close socket for user: "+username+", cause of the following IOException");
+            e.printStackTrace();
         }
     }
     public void resetLastAlive(){

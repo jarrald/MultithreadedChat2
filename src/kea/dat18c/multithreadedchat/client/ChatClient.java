@@ -56,7 +56,7 @@ public class ChatClient {
             "E.g.:\n" +
             "JOIN <<user_name>>, <<server_ip>>:<<server_port>>\n" +
             "Might look like this:\n" +
-            "JOIN alice_92, 172.168.168.12:4578";
+            "JOIN alice_92, 192.168.0.1:6000";
 
     public Boolean hasDisconnected() {
         return disconnected;
@@ -122,8 +122,9 @@ public class ChatClient {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
             String command = bufferedReader.readLine();
 
-            //Checks if the syntax input by the user is correct
-            if (command.matches("^JOIN [\\w\\d-_]{1,12}, (([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):[0-9]+")) {
+            //Checks if the syntax input by the user is correct, checks that it's
+            if (command.matches("^JOIN [\\w\\d-_]{1,12}, (([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):"+
+                    "(([0-9])|([1-9][0-9])|([1-9][0-9][0-9])|([1-9][0-9][0-9][0-9])|([0-5][0-9][0-9][0-9][0-9])|(6[0-4][0-9][0-9][0-9])|(65[0-4][0-9][0-9])|(655[0-2][0-9])|(6553[0-5]))")) {
                 //Splits the command into string array with , splitting the 2
                 //Takes first element of array with [0] and splits it again with join (Effectively removing "JOIN "
                 String hostname = (command.split(","))[0].split("JOIN ")[0];
@@ -134,6 +135,8 @@ public class ChatClient {
                 ChatClient client = new ChatClient(hostname, port, userName);
                 client.execute();
             }
+            else if(command.matches("QUIT"))
+                break;
             else {
                 System.out.println("Wrong syntax please try again\n");
             }
