@@ -52,19 +52,19 @@ public class ChatServer {
     }
 
     public void logString(String text) throws IOException {
-        String logText = new Date().toLocaleString() +" "+ text;
+        String logText = new Date().toString() +" "+ text;
         Files.write(logPath, Collections.singleton(logText), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
     }
 
     public void execute() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
 
-            String startStatus =  new Date().toLocaleString() + " Chat Server is listening on port " + port;
+            String startStatus =  new Date().toString() + " Chat Server is listening on port " + port;
             Files.write(logPath, Collections.singleton(startStatus), StandardCharsets.UTF_8);
             System.out.println(startStatus);
 
             ExecutorService executor = Executors.newFixedThreadPool(capacity);
-            Thread heartBeat = new Thread(new ActivityMonitor(TimeUnit.SECONDS, 10, this));
+            Thread heartBeat = new Thread(new ActivityMonitor(TimeUnit.MINUTES, 1, this));
             heartBeat.start();
             while (true) {
                 Socket socket = serverSocket.accept();
